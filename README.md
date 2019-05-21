@@ -10,6 +10,74 @@
 > 用户也可以设置为发起多个请求是，只要有一个请求错误，就全部失败
 
 
+### 怎么使用
+安装cute-http
+```
+npm i cute-http --save
+```
+引入
+```
+import * as cute from 'cute-http';
+```
+
+### api
+#### 常量
+```
+const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, LOCAL_STORAGE, MEMORY} = cute.const;
+···
+* ONE_ERROR_ABORT_ALL 一个报错，中断所有的请求
+* KEEP_ALL_BEEN_EXECUTED 一个报错，不影响其他的请求，调用者需要自己处理返回的错误
+* LOCAL_STORAGE 将get返回结果缓存在`localStorage`
+* MEMORY 将get返回结果缓存在`memory`
+
+#### setConfig
+顶层api,为cute配置参数
+```
+cute setConfig({
+  retryCount: number,//重试次数
+  timeout: 1900,//超时时间
+  debug:true,//打开debug模式
+  // cacheType: memory, // 针对get请求是否使用缓存策略，值为 'memory' | 'localStorage' 默认无，
+  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的，cute默认采用KEEP_ALL_BEEN_EXECUTED
+})
+```
+#### multi
+```
+/**
+ * 发起多个post请求
+ * @param {Array<{type:'post', url:string, body:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
+ * @param {{failStrategy?:number, retryCount?:number, callbackParamName?:string, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
+ * otherAxiosConfigKey @see https://github.com/axios/axios
+ */
+cute.multi(urls, extendedAxiosConfig)
+```
+#### get
+```
+cute.get(url:string, extendedAxiosConfig:ExtendedAxiosConfig)
+```
+#### multiGet
+```
+cute.multiGet(urls:string[], extendedAxiosConfig:ExtendedAxiosConfig)
+```
+#### post
+```
+cute.post(url:string, body:object, extendedAxiosConfig:ExtendedAxiosConfig)
+```
+#### multiPost
+```
+cute.multiPost({url:string, body:object}[], extendedAxiosConfig:ExtendedAxiosConfig)
+```
+#### jsonp
+```
+cute.jsonp(url:string, extendedAxiosConfig:ExtendedAxiosConfig)
+```
+#### multiJsonp
+```
+cute.multiJsonp(urls:string[], extendedAxiosConfig:ExtendedAxiosConfig)
+```
+
+
+
 ### 以下代码在test/test-api.js中，用户可以执行node ${your_test_dir}/test-api.js 查看效果
 当然，你也可以注释掉某些代码，只看其中一个的效果
 ```
@@ -17,8 +85,7 @@ require('./start-server');
 const cute = require('../index');
 const process = require('process');
 
-// ONE_ERROR_ABORT_ALL = 1;//一个报错，终端所有的请求
-// KEEP_ALL_BEEN_EXECUTED = 2;//一个报错，不影响其他的请求，调用者需要自己处理返回的错误
+
 const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED} = cute.const;
 
 cute.setConfig({
@@ -26,7 +93,7 @@ cute.setConfig({
   timeout: 1900,
   debug:true,
   // cacheType: memory, // 值为 'memory' | 'localStorage' 默认无
-  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的，cute默认采用KEEP_ALL_BEEN_EXECUTED
+  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
 })
 
 const getBooks = 'http://localhost:8888/get-books';
