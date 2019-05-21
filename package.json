@@ -1,0 +1,29 @@
+{
+  "name": "cute-http",
+  "version": "1.0.0",
+  "description": "allow you cache response with memory or locaStorage; allow you set timeout and retry count;allow you send multi request in one time",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/concentjs/cute-http.git"
+  },
+  "keywords": [
+    "http",
+    "request",
+    "axios"
+  ],
+  "author": "fantasticsoul",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/concentjs/cute-http/issues"
+  },
+  "homepage": "https://github.com/concentjs/cute-http#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "axios-jsonp": "^1.0.2"
+  }
+}
