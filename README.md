@@ -24,7 +24,7 @@ import * as cute from 'cute-http';
 #### 常量
 ```
 const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, LOCAL_STORAGE, MEMORY} = cute.const;
-···
+```
 * ONE_ERROR_ABORT_ALL 一个报错，中断所有的请求
 * KEEP_ALL_BEEN_EXECUTED 一个报错，不影响其他的请求，调用者需要自己处理返回的错误
 * LOCAL_STORAGE 将get返回结果缓存在`localStorage`
@@ -37,8 +37,8 @@ cute setConfig({
   retryCount: number,//重试次数
   timeout: 1900,//超时时间
   debug:true,//打开debug模式
-  // cacheType: memory, // 针对get请求是否使用缓存策略，值为 'memory' | 'localStorage' 默认无，
-  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的，cute默认采用KEEP_ALL_BEEN_EXECUTED
+  // cacheType: memory, // 默认无，
+  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
 })
 ```
 #### multi
