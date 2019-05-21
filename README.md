@@ -1,4 +1,9 @@
 ## cute-http
+<p align="center">
+  <a href="#">
+    <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cute-http.png">
+  </a>
+</p>
 
 ### cute-http，一个让你觉得非常可爱的http请求库
 * 可以设置重试次数
