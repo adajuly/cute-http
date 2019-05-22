@@ -1,12 +1,12 @@
 ## cute-http
 <p align="center">
   <a href="#">
-    <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cute-http.png">
+    <img width="460" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cute-http.png">
   </a>
 </p>
 
 ### cute-http，一个可爱的http请求库，易用&简单
-* 可以设置重试次数
+* 可以设置请求超时后的重试次数
 * 可以对get请求设置缓存策略
 >cute对缓存做了优化，同一个url的get请求，如果query参数不变，就优先取缓存结果，取不到再去后端要，如果发生变化，会删除之前的缓存结果看，并去后端请求新结果，这样防止缓存过多无用数据
 * 可以发起多个get，多个post请求，多个jsonp请求，或者多个不同类型的请求
@@ -40,7 +40,7 @@ const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, LOCAL_STORAGE, MEMORY} = cut
 ```
 cute setConfig({
   retryCount: number,//重试次数
-  timeout: 1900,//超时时间
+  timeout: 1900,//超时时间（毫秒）
   debug:true,//打开debug模式
   // cacheType: memory, // 默认无，
   // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
