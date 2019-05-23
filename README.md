@@ -42,7 +42,7 @@ cute setConfig({
   retryCount: number,//重试次数
   timeout: 1900,//超时时间（毫秒）
   debug:true,//打开debug模式
-  // cacheType: memory, // 默认无，
+  // cacheType: MEMORY, // 默认无，
   // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
 })
 ```
