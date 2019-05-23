@@ -5,22 +5,56 @@ var util = require('./util');
 var cache = require('./cache');
 var jsonpAdapter = require('axios-jsonp');
 
+function _verifyResponseData(url, data){
+  var config = conf.getConfig();
+  var dataVerifyRule = config.dataVerifyRule;
+  var path_dataVerifyRule_ = config.pathDataVerifyRule;
+
+  var path = util.getPath(url);
+  var pathDataRule = path_dataVerifyRule_[path]
+  var rule = pathDataRule || dataVerifyRule;
+  var errMessage = '';
+  if (rule) {
+    var keys = Object.keys(rule);
+    keys.forEach(key => {
+      if (!data.hasOwnProperty(key)) {
+        return errMessage += 'no key[' + key + '] defined in data;';
+      }
+      var expectedType = rule[key];
+      var actualType = typeof data[key];
+      if (expectedType !== actualType) {
+        errMessage += 'key[' + key + '] type error, expected to be ' + expectedType + ' but actually it is ' + actualType;
+      }
+    });
+  }
+  if(errMessage){
+    var err = new Error(errMessage);
+    err.code = cst.ERR_RESPONSE_DATA_TYPE_INVALID;
+    throw err;
+  }
+}
 
 function _retry(fn, args, retryCount, remainRetryCount, cb) {
+  var config = conf.getConfig();
   if (remainRetryCount === 0) {
     var err = new Error('fetch data failed after retry:' + retryCount + ' times!');
     err.code = cst.ERR_FETCH_FAILED_AFTER_RETRY;
-    if(conf.getConfig().debug === true){
+    if (config.debug === true) {
       console.debug('重试结束，最终还是没有拿到结果');
     }
     return cb(err);
-  } 
+  }
   fn.apply(null, args).then(reply => {
-    cb(null, reply);
+    try{
+      _verifyResponseData(args[0], reply.data);
+      cb(null, reply);
+    }catch(err){
+      cb(err);
+    }
   }).catch(err => {
     if (util.isTimeout(err)) {
-      if(conf.getConfig().debug === true){
-        console.debug('第'+retryCount+'连接已超时，cute将继续重试');
+      if (config.debug === true) {
+        console.debug('第' + retryCount + '连接已超时，cute将继续重试');
       }
       return _retry(fn, args, retryCount, --remainRetryCount, cb);
     }
@@ -72,7 +106,7 @@ function _makeConfig(userInputAxiosConfig) {
     retryCount: retryCount,
     failStrategy: failStrategy,
     cacheType: cacheType,
-    callbackParamName:callbackParamName,
+    callbackParamName: callbackParamName,
   }
 }
 
@@ -97,7 +131,7 @@ function _get(url, conf) {
   }
 }
 
-function _post(url, postBody, conf){
+function _post(url, postBody, conf) {
   return new Promise((resolve, reject) => {
     _callAxiosApi('post', [url, postBody, conf.axiosConfig], conf, resolve, reject);
   });
@@ -131,7 +165,7 @@ function get(url, extendedAxiosConfig) {
  * @param {object} postBody 
  * @param {{failStrategy?:number, retryCount?:number, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
-function post(url, postBody, extendedAxiosConfig){
+function post(url, postBody, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
   return _post(url, postBody, conf);
 }
@@ -145,7 +179,7 @@ function multiGet(urls, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
   var getTasks = urls.map(function (url) {
     if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _get(url, conf).catch(function (err) { return err; })
+      return _get(url, conf).catch(function (err) { console.log('err:', err); return err; })
     } else {
       return _get(url, conf);
     }
@@ -199,7 +233,7 @@ function multiJsonp(urls, extendedAxiosConfig) {
  * @param {Array<{type:'post', url:string, body:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
  * @param {{failStrategy?:number, retryCount?:number, callbackParamName?:string, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
-function multi(items, extendedAxiosConfig){
+function multi(items, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
   var tasks = items.forEach(function (item) {
     var task;
@@ -207,13 +241,13 @@ function multi(items, extendedAxiosConfig){
     var url = item.url;
 
     if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      if(type === 'get') task = _get(url, conf).catch(function (err) { return err; });
-      else if(type==='post')task = _post(url, item.body, conf).catch(function (err) { return err; });
-      else if(type === 'jsonp')task = _jsonp(url, conf).catch(function (err) { return err; });
+      if (type === 'get') task = _get(url, conf).catch(function (err) { return err; });
+      else if (type === 'post') task = _post(url, item.body, conf).catch(function (err) { return err; });
+      else if (type === 'jsonp') task = _jsonp(url, conf).catch(function (err) { return err; });
     } else {
-      if(type === 'get') task = _get(url, conf);
-      else if(type==='post')task = _post(url, item.body, conf);
-      else if(type === 'jsonp')task = _jsonp(url, conf);
+      if (type === 'get') task = _get(url, conf);
+      else if (type === 'post') task = _post(url, item.body, conf);
+      else if (type === 'jsonp') task = _jsonp(url, conf);
     }
     return task;
   });

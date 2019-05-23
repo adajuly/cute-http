@@ -3,7 +3,23 @@
  */
 const middlewares = [];
 const method_handler_ = {};
-const jsonHead = {'Content-Type':'application/json'};
+const jsonHead = { 'Content-Type': 'application/json' };
+const querystring = require('querystring');
+
+const util = {
+  extractQueryAndPath(url) {
+    const idx = url.indexOf('?');
+    let path = '', query = {};
+    if (idx >= 0) {
+      path = url.substr(0, idx);
+      const queryStr = url.substr(idx + 1);
+      query = querystring.parse(queryStr);
+    } else {
+      path = url;
+    }
+    return { path, query };
+  }
+}
 
 exports.createApp = (config) => {
   return {
@@ -28,14 +44,18 @@ exports.router = {
 }
 
 function execute(req, res) {
-  res.send = obj=> res.end(JSON.stringify(obj))
+  res.send = obj => res.end(JSON.stringify(obj))
   const { method, url } = req;
   const path_handler_ = method_handler_[method];
   if (!path_handler_) {
     res.writeHead(404, jsonHead);
     return res.end(`404 not found ${method} ${url}`);
   }
-  const fn = path_handler_[url];
+  const {path, query} = util.extractQueryAndPath(url);
+  req.path = path;
+  req.query = query;
+
+  const fn = path_handler_[path];
   if (!fn) {
     res.writeHead(404, jsonHead);
     return res.end(`404 not found ${method} ${url}`);

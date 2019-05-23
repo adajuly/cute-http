@@ -4,7 +4,7 @@
   "description": "allow you cache response with memory or locaStorage; allow you set timeout and retry count;allow you send multi request in one time",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "./node_modules/ava/cli.js ./test/test-api.js ",
     "build": "tsc"
   },
   "repository": {
@@ -25,5 +25,8 @@
   "dependencies": {
     "axios": "^0.18.0",
     "axios-jsonp": "^1.0.2"
+  },
+  "devDependencies": {
+    "ava": "^1.4.1"
   }
 }
