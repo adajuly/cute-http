@@ -107,11 +107,7 @@ cute.setConfig({
   failStrategy: KEEP_ALL_BEEN_EXECUTED, //不设置的话，cute默认采用ONE_ERROR_ABORT_ALL
 })
 
-const getBooks = 'http://localhost:8888/get-books';
 const updateBook = 'http://localhost:8888/update-book';
-const mockTimeout = 'http://localhost:8888/mock-timeout';
-
-const wrongDataFormatResponse = `http://localhost:8888/wrong-data-format-response`;
 const getBooksByUid = uid => `http://localhost:8888/get-books?uid=${uid}`;
 
 async function main(){
