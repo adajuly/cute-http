@@ -111,10 +111,18 @@ const updateBook = 'http://localhost:8888/update-book';
 const getBooksByUid = uid => `http://localhost:8888/get-books?uid=${uid}`;
 
 async function main(){
-  const result = await cute.get(getBooksByUid(1));
-  const result = await cute.multiGet([getBooksByUid(1), getBooksByUid(2)]);
-  const result = await cute.post(updateBook, {id:1, name:'zk'});
-  const result = await cute.multiPost([{url:updateBook, body:{id:1, name:'zk'}}, {url:updateBook, body:{id:2, name:'wow'}}]);
+  const result1 = await cute.get(getBooksByUid(1));
+  const books = result.result1;
+  
+  const result2 = await cute.multiGet([getBooksByUid(1), getBooksByUid(2)]);
+  const [reply1, reply2] = result2;
+  
+  const result3 = await cute.post(updateBook, {id:1, name:'zk'});
+  const updateReply = result.result3;
+  
+  const result4 = await cute.multiPost([{url:updateBook, body:{id:1, name:'zk'}}, {url:updateBook, body:{id:2, name:'wow'}}]);
+  const [updateReply1, updateReply2] = result4;
+
 }
 
 ```
