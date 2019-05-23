@@ -42,7 +42,7 @@ cute setConfig({
   retryCount: number,//重试次数
   timeout: 1900,//超时时间（毫秒）
   debug:true,//打开debug模式
-  // cacheType: memory, // 默认无，
+  // cacheType: MEMORY, // 默认无，如果开启了缓存，cute只针对get请求做缓存，如需穿透缓存，可以对query参数加随机值，或者调用cute.get时，配置第二个参数{cacheType:null}，表示针对这一次调用不读取缓存值
   // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
 })
 ```
@@ -81,61 +81,57 @@ cute.jsonp(url:string, extendedAxiosConfig:ExtendedAxiosConfig)
 cute.multiJsonp(urls:string[], extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 
-
-
 ### 以下代码在test/test-api.js中，用户可以执行node ${your_test_dir}/test-api.js 查看效果
 当然，你也可以注释掉某些代码，只看其中一个的效果
 ```
-require('./start-server');
 const cute = require('../index');
-const process = require('process');
-
-
-const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED} = cute.const;
+const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, MEMORY} = cute.const;
+const axios = cute.axios;//这个是axios模块的引用
 
 cute.setConfig({
-  retryCount: 5,
-  timeout: 1900,
-  debug:true,
-  // cacheType: memory, // 值为 'memory' | 'localStorage' 默认无
-  // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
+  retryCount: 3,//设置重试次数
+  timeout: 1900,//设置超时时间
+  debug: true,
+  dataVerifyRule: {//设置通用的响应数据校验规则，只支持校验json对象的第一层key的值和类型的校验
+    data: 'object',
+    code: 'number',
+    message: 'string',
+  },
+  pathDataVerifyRule:{//对某些请求设置独立的数据校验规则
+    '/staff/foo':{
+      reply:'object',
+      msg:'string',
+    }
+  }
+  cacheType: MEMORY, // 值为 'memory' | 'localStorage' 默认无
+  failStrategy: KEEP_ALL_BEEN_EXECUTED, //不设置的话，cute默认采用ONE_ERROR_ABORT_ALL
 })
 
 const getBooks = 'http://localhost:8888/get-books';
-const updateBooks = 'http://localhost:8888/update-books';
+const updateBook = 'http://localhost:8888/update-book';
 const mockTimeout = 'http://localhost:8888/mock-timeout';
 
-function startTest(){
-  console.log('startTest');
+const wrongDataFormatResponse = `http://localhost:8888/wrong-data-format-response`;
+const getBooksByUid = uid => `http://localhost:8888/get-books?uid=${uid}`;
 
-  cute.get(getBooks).then(re=>{
-    console.log('reply1 is', re.data);
-  });
+async function main(){
+  const result = await cute.get(getBooksByUid(1));
+  const result = await cute.multiGet([getBooksByUid(1), getBooksByUid(2)]);
+  const result = await cute.post(updateBook, {id:1, name:'zk'});
+  const result = await cute.multiPost([{url:updateBook, body:{id:1, name:'zk'}}, {url:updateBook, body:{id:2, name:'wow'}}]);
+}
 
-  cute.post(updateBooks, {a:1}).then(re=>{
-    console.log('reply2 is', re.data);
-  });
+```
+>更多示例见/test/test-api.js
 
-  cute.get(mockTimeout, {a:1}).then(re=>{
-    console.log('reply2 is', re.data);
-  });
-  
-  cute.multiGet([getBooks, getBooks, getBooks]).then(arr=>{
-    const [{data:data1}, {data:data2}, {data:data3}] = arr;
-    console.log('multiGet reply is', data1, data2, data3);
-  });
-
-  cute.multiGet([getBooks, mockTimeout, getBooks]).then(arr=>{
-    const [{data:data1}, {data:data2}, {data:data3}] = arr;
-    console.log('multiGet reply is', data1, data2, data3);
-  });
-
-};
-
-setTimeout(startTest, 600);
-process.on('unhandledRejection', (reason)=>{
-  console.log(reason.message);
-});
+### 运行测试用例
+运行模拟服务器
+```
+* npm start
+```
+执行测试脚本
+```
+* npm test
 ```
 
 ### 彩蛋,test目录下内置了一个mini-express,仅仅用于服务本测试用例^_^

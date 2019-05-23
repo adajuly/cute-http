@@ -4,6 +4,7 @@
   "description": "allow you cache response with memory or locaStorage; allow you set timeout and retry count;allow you send multi request in one time",
   "main": "index.js",
   "scripts": {
+    "start": "node ./test/mock-server/run.js  ",
     "test": "./node_modules/ava/cli.js ./test/test-api.js ",
     "build": "tsc"
   },
