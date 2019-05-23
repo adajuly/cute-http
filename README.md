@@ -1,13 +1,18 @@
 ## cute-http
+<p align="center">
+  <a href="#">
+    <img width="460" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cute-http.png">
+  </a>
+</p>
 
-### cute-http，一个让你觉得非常可爱的http请求库
-* 可以设置重试次数
+### cute-http，一个可爱的http请求库，易用&简单
+* 可以设置请求超时后的重试次数
 * 可以对get请求设置缓存策略
->cute对缓存做了优化，同一个url的get请求，如果query参数不变，就优先缓存结果，如果发生变化，会删除之前的缓存结果看，并去后端请求新结果
-* 可以发起多个get，多个post请求，多个jsonp请求，或者多个不能类型的请求
+>cute对缓存做了优化，同一个url的get请求，如果query参数不变，就优先取缓存结果，取不到再去后端要，如果发生变化，会删除之前的缓存结果看，并去后端请求新结果，这样防止缓存过多无用数据
+* 可以发起多个get，多个post请求，多个jsonp请求，或者多个不同类型的请求
 * 针对并行请求，cute有两种策略处理结果
-> 默认使用保证请求执行完毕，才返回结果，就算有其中一个请求出现错误，也不会影响其他请求
-> 用户也可以设置为发起多个请求是，只要有一个请求错误，就全部失败
+> 默认使用保证请求执行完毕，才返回结果，就算有其中一个请求出现错误，也不会影响其他请求，当然，此时用户需要遍历返回的结果数据，因为可能其中有一个是错误。
+> 用户也可以设置为发起多个请求时，只要有一个请求错误，就全部失败。
 
 
 ### 怎么使用
@@ -35,7 +40,7 @@ const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, LOCAL_STORAGE, MEMORY} = cut
 ```
 cute setConfig({
   retryCount: number,//重试次数
-  timeout: 1900,//超时时间
+  timeout: 1900,//超时时间（毫秒）
   debug:true,//打开debug模式
   // cacheType: memory, // 默认无，
   // failStrategy: ONE_ERROR_ABORT_ALL, //不设置的话，cute默认采用KEEP_ALL_BEEN_EXECUTED
