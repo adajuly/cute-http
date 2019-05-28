@@ -1,6 +1,6 @@
 {
   "name": "cute-http",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "allow you cache response with memory or locaStorage; allow you set timeout and retry count;allow you send multi request in one time",
   "main": "index.js",
   "scripts": {
