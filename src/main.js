@@ -54,7 +54,7 @@ function _retry(fn, args, retryCount, remainRetryCount, cb) {
   }).catch(err => {
     if (util.isTimeout(err)) {
       if (config.debug === true) {
-        console.debug('第' + retryCount + '连接已超时，cute将继续重试');
+        console.debug('第' + remainRetryCount + '连接已超时，cute将继续重试');
       }
       return _retry(fn, args, retryCount, --remainRetryCount, cb);
     }
