@@ -117,6 +117,12 @@ function _callAxiosApi(method, args, conf, resolve, reject) {
   });
 }
 
+function _pomisedCallAxiosApi(method, args, conf) {
+  return new Promise((resolve, reject) => {
+    _callAxiosApi(method, args, conf, resolve, reject);
+  });
+}
+
 /**
  * 目前只针对get请求做缓存
  */
@@ -125,16 +131,16 @@ function _get(url, conf) {
   if (result) {
     Promise.resolve(result);
   } else {
-    return new Promise((resolve, reject) => {
-      _callAxiosApi('get', [url, conf.axiosConfig], conf, resolve, reject);
-    });
+    return _pomisedCallAxiosApi('get', [url, conf.axiosConfig], conf);
   }
 }
 
 function _post(url, postBody, conf) {
-  return new Promise((resolve, reject) => {
-    _callAxiosApi('post', [url, postBody, conf.axiosConfig], conf, resolve, reject);
-  });
+  return _pomisedCallAxiosApi('post', [url, postBody, conf.axiosConfig], conf);
+}
+
+function _put(url, putBody, conf) {
+  return _pomisedCallAxiosApi('put', [url, putBody, conf.axiosConfig], conf);
 }
 
 //@see https://github.com/AdonisLau/axios-jsonp
@@ -150,13 +156,24 @@ function _jsonp(url, conf) {
 }
 
 /**
- * 发起多个get请求
+ * 发起单个get请求
  * @param {string} url
  * @param {{failStrategy:number, retryCount:number, cacheType:null|'memory'|'localStorage', [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
 function get(url, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
   return _get(url, conf);
+}
+
+/**
+ * 发起单个put请求
+ * @param {string} url
+ * @param {object} body 
+ * @param {{failStrategy?:number, retryCount?:number, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
+ */
+function put(url, body, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  return _put(url, body, conf);
 }
 
 /**
@@ -201,6 +218,20 @@ function multiPost(items, extendedAxiosConfig) {
       return _post(url, body, conf).catch(function (err) { return err; })
     } else {
       return _post(url, body, conf);
+    }
+  });
+  return Promise.all(postTasks);
+}
+
+function multiPut(items, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  var postTasks = items.map(function (item) {
+    var url = item.url;
+    var body = item.body;
+    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
+      return _put(url, body, conf).catch(function (err) { return err; })
+    } else {
+      return _put(url, body, conf);
     }
   });
   return Promise.all(postTasks);
@@ -254,9 +285,45 @@ function multi(items, extendedAxiosConfig) {
   return Promise.all(tasks);
 }
 
+/**
+ * 发起请求
+ * @param {{method:string, url:string, option:ExtendedAxiosConfig, body?:object}} spec 
+ */
+function request(spec) {
+  var body = spec.body;
+  var extendedAxiosConfig = spec.option;
+  var conf = _makeConfig(extendedAxiosConfig);
+
+  var args = [url];
+  if (body) args.push(body);
+  args.push(conf.axiosConfig);
+  return _pomisedCallAxiosApi(spec.method, args, conf);
+}
+
+/**
+ * 发起多个请求
+ * @param {{method:string, url:string, option:ExtendedAxiosConfig, body?:object}[]} specList 
+ * @param {{failStrategy:1 | 2}} option? 
+ */
+function multiRequest(specList, option) {
+  const failStrategy = option && option.failStrategy;
+  var tasks = specList.map(function (spec) {
+    if (failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
+      return request(spec).catch(function (err) { console.log('err:', err); return err; })
+    } else {
+      return request(spec);
+    }
+  });
+  return Promise.all(tasks);
+}
+
 module.exports = {
+  multiRequest: multiRequest,
+  request: request,
   get: get,
   multiGet: multiGet,
+  put: put,
+  multiPut: multiPut,
   post: post,
   multiPost: multiPost,
   jsonp: jsonp,
