@@ -34,8 +34,10 @@ function _verifyResponseData(url, data){
   }
 }
 
-function _retry(fn, args, retryCount, remainRetryCount, cb) {
+function _retry(fn, args, conf, remainRetryCount, cb) {
+  var retryCount = conf.retryCount;
   var config = conf.getConfig();
+
   if (remainRetryCount === 0) {
     var err = new Error('fetch data failed after retry:' + retryCount + ' times!');
     err.code = cst.ERR_FETCH_FAILED_AFTER_RETRY;
@@ -44,11 +46,21 @@ function _retry(fn, args, retryCount, remainRetryCount, cb) {
     }
     return cb(err);
   }
+
   fn.apply(null, args).then(reply => {
-    try{
-      _verifyResponseData(args[0], reply.data);
+    try {
+      var url = args[0];
+      var cacheType = conf.cacheType;
+      _verifyResponseData(url, reply.data);
+
+      if (cacheType === cst.LOCAL_STORAGE) {
+        cache.setResultToLocalStorage(url, reply);
+      } else if (cacheType === cst.MEMORY) {
+        cache.setResultToMemory(url, reply);
+      }
+
       cb(null, reply);
-    }catch(err){
+    } catch (err) {
       cb(err);
     }
   }).catch(err => {
@@ -56,7 +68,7 @@ function _retry(fn, args, retryCount, remainRetryCount, cb) {
       if (config.debug === true) {
         console.debug('第' + remainRetryCount + '连接已超时，cute将继续重试');
       }
-      return _retry(fn, args, retryCount, --remainRetryCount, cb);
+      return _retry(fn, args, conf, --remainRetryCount, cb);
     }
     cb(err);
   });
@@ -112,7 +124,7 @@ function _makeConfig(userInputAxiosConfig) {
 
 function _callAxiosApi(method, args, conf, resolve, reject) {
   var retryCount = conf.retryCount;
-  _retry(axios[method], args, retryCount, retryCount, (err, reply) => {
+  _retry(axios[method], args, conf, retryCount, (err, reply) => {
     err ? reject(err) : resolve(reply);
   });
 }
@@ -149,7 +161,7 @@ function _jsonp(url, conf) {
   return new Promise((resolve, reject) => {
     _retry(axios, {
       url: url, adapter: jsonpAdapter, callbackParamName: conf.callbackParamName, // optional, 'callback' by default
-    }, retryCount, retryCount, (err, reply) => {
+    }, conf, retryCount, (err, reply) => {
       err ? reject(err) : resolve(reply);
     });
   });

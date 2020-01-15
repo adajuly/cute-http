@@ -30,6 +30,7 @@ exports.setResultToLocalStorage= function(url, result) {
     localStorage.setItem(url, JSON.stringify(result));
   } catch (err) {
     //因为localStorage的容量限制，可能set失败
+    console.error('[setResultToLocalStorage] ', err);
   }
 }
 
@@ -59,9 +60,9 @@ exports.getResultFromMemory = function(url) {
 
 exports.getResult = function(url, cacheType) {
   if (cacheType === cst.MEMORY) {
-    return getResultFromMemory(url);
+    return exports.getResultFromMemory(url);
   } else if (cacheType === cst.ONE_ERROR_ABORT_ALL) {
-    return getResultFromLocalStorage(url);
+    return exports.getResultFromLocalStorage(url);
   }else{
     return null;
   }
