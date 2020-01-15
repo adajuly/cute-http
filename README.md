@@ -1,7 +1,7 @@
 ## cute-http
 <p align="center">
   <a href="#">
-    <img width="460" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cute-http.png">
+    <img width="460" src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cute-http.png">
   </a>
 </p>
 
