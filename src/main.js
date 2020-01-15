@@ -278,7 +278,7 @@ function multiJsonp(urls, extendedAxiosConfig) {
  */
 function multi(items, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  var tasks = items.forEach(function (item) {
+  var tasks = items.map(function (item) {
     var task;
     var type = item.type;
     var url = item.url;
@@ -287,10 +287,12 @@ function multi(items, extendedAxiosConfig) {
       if (type === 'get') task = _get(url, conf).catch(function (err) { return err; });
       else if (type === 'post') task = _post(url, item.body, conf).catch(function (err) { return err; });
       else if (type === 'jsonp') task = _jsonp(url, conf).catch(function (err) { return err; });
+      else throw new Error('type ' + type + ' is wrong');
     } else {
       if (type === 'get') task = _get(url, conf);
       else if (type === 'post') task = _post(url, item.body, conf);
       else if (type === 'jsonp') task = _jsonp(url, conf);
+      else throw new Error('type ' + type + ' is wrong');
     }
     return task;
   });
