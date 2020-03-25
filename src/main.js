@@ -147,6 +147,10 @@ function _get(url, conf) {
   }
 }
 
+function _del(url, conf) {
+  return _pomisedCallAxiosApi('delete', [url, conf.axiosConfig], conf);
+}
+
 function _post(url, postBody, conf) {
   return _pomisedCallAxiosApi('post', [url, postBody, conf.axiosConfig], conf);
 }
@@ -178,6 +182,16 @@ function get(url, extendedAxiosConfig) {
 }
 
 /**
+ * 发起单个delete请求
+ * @param {*} url 
+ * @param {*} extendedAxiosConfig 
+ */
+function del(url, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  return _del(url, conf);
+}
+
+/**
  * 发起单个put请求
  * @param {string} url
  * @param {object} body 
@@ -199,6 +213,7 @@ function post(url, postBody, extendedAxiosConfig) {
   return _post(url, postBody, conf);
 }
 
+
 /**
  * 发起多个get请求
  * @param {string[]} urls 
@@ -211,6 +226,18 @@ function multiGet(urls, extendedAxiosConfig) {
       return _get(url, conf).catch(function (err) { console.log('err:', err); return err; })
     } else {
       return _get(url, conf);
+    }
+  });
+  return Promise.all(getTasks);
+}
+
+function multiDel(urls, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  var getTasks = urls.map(function (url) {
+    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
+      return _del(url, conf).catch(function (err) { console.log('err:', err); return err; })
+    } else {
+      return _del(url, conf);
     }
   });
   return Promise.all(getTasks);
@@ -336,6 +363,8 @@ module.exports = {
   request: request,
   get: get,
   multiGet: multiGet,
+  del: del,
+  multiDel: multiDel,
   put: put,
   multiPut: multiPut,
   post: post,
