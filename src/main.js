@@ -1,12 +1,12 @@
 var axios = require('axios').default;
 var cst = require('./const');
-var conf = require('./config');
+var cuteConf = require('./config');
 var util = require('./util');
 var cache = require('./cache');
 var jsonpAdapter = require('axios-jsonp');
 
 function _verifyResponseData(url, data){
-  var config = conf.getConfig();
+  var config = cuteConf.getConfig();
   var dataVerifyRule = config.dataVerifyRule;
   var path_dataVerifyRule_ = config.pathDataVerifyRule;
 
@@ -36,7 +36,7 @@ function _verifyResponseData(url, data){
 
 function _retry(fn, args, conf, remainRetryCount, cb) {
   var retryCount = conf.retryCount;
-  var config = conf.getConfig();
+  var config = cuteConf.getConfig();
 
   if (remainRetryCount === 0) {
     var err = new Error('fetch data failed after retry:' + retryCount + ' times!');
@@ -83,10 +83,10 @@ function _makeConfig(userInputAxiosConfig) {
     axiosConfig = userInputAxiosConfig;
   }
 
-  var defaultConfig = conf.getConfig();
+  var defaultConfig = cuteConf.getConfig();
   //如果用户没有传入timeout, 使用默认配置的timeout
   if (axiosConfig.timeout === undefined) {
-    axiosConfig.timeout = conf.getConfig().timeout;
+    axiosConfig.timeout = cuteConf.getConfig().timeout;
   }
 
   var retryCount = defaultConfig.retryCount;
@@ -135,60 +135,65 @@ function _pomisedCallAxiosApi(method, args, conf) {
   });
 }
 
-/**
- * 目前只针对get请求做缓存
- */
-function _get(url, conf) {
-  var result = cache.getResult(conf.cacheType);
-  if (result) {
-    Promise.resolve(result);
-  } else {
-    return _pomisedCallAxiosApi('get', [url, conf.axiosConfig], conf);
+
+
+var helper = {
+  /** 目前只针对get请求做缓存 */
+  get: function (url, data, conf) {
+    var result = cache.getResult(conf.cacheType);
+    if (result) {
+      Promise.resolve(result);
+    } else {
+      return _pomisedCallAxiosApi('get', [util.appendDataToUrl(url, data), conf.axiosConfig], conf);
+    }
+  },
+  del: function (url, data, conf) {
+    return _pomisedCallAxiosApi('delete', [util.appendDataToUrl(url, data), conf.axiosConfig], conf);
+  },
+  // conf 参数放第二位，方便和get del统一，动态调用时，参数顺序可以保持一致
+  post: function (url, body, conf) {
+    return _pomisedCallAxiosApi('post', [url, body, conf.axiosConfig], conf);
+  },
+  patch: function (url, body, conf) {
+    return _pomisedCallAxiosApi('patch', [url, body, conf.axiosConfig], conf);
+  },
+  put: function (url, body, conf) {
+    return _pomisedCallAxiosApi('put', [url, body, conf.axiosConfig], conf);
+  },
+  jsonp: function (url, data, conf) {
+    const retryCount = conf.retryCount;
+    const _url = util.appendDataToUrl(url, data);
+    return new Promise((resolve, reject) => {
+      _retry(axios, {
+        url: _url, adapter: jsonpAdapter, callbackParamName: conf.callbackParamName, // optional, 'callback' by default
+      }, conf, retryCount, (err, reply) => {
+        err ? reject(err) : resolve(reply);
+      });
+    });
   }
 }
 
-function _del(url, conf) {
-  return _pomisedCallAxiosApi('delete', [url, conf.axiosConfig], conf);
-}
-
-function _post(url, postBody, conf) {
-  return _pomisedCallAxiosApi('post', [url, postBody, conf.axiosConfig], conf);
-}
-
-function _put(url, putBody, conf) {
-  return _pomisedCallAxiosApi('put', [url, putBody, conf.axiosConfig], conf);
-}
-
-//@see https://github.com/AdonisLau/axios-jsonp
-function _jsonp(url, conf) {
-  const retryCount = conf.retryCount;
-  return new Promise((resolve, reject) => {
-    _retry(axios, {
-      url: url, adapter: jsonpAdapter, callbackParamName: conf.callbackParamName, // optional, 'callback' by default
-    }, conf, retryCount, (err, reply) => {
-      err ? reject(err) : resolve(reply);
-    });
-  });
-}
 
 /**
  * 发起单个get请求
  * @param {string} url
+ * @param {string | object} data
  * @param {{failStrategy:number, retryCount:number, cacheType:null|'memory'|'localStorage', [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
-function get(url, extendedAxiosConfig) {
+function get(url, data, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return _get(url, conf);
+  return helper.get(url, data, conf);
 }
 
 /**
  * 发起单个delete请求
  * @param {*} url 
+ * @param {string | object} data
  * @param {*} extendedAxiosConfig 
  */
-function del(url, extendedAxiosConfig) {
+function del(url, data, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return _del(url, conf);
+  return helper.del(url, data, conf);
 }
 
 /**
@@ -199,48 +204,67 @@ function del(url, extendedAxiosConfig) {
  */
 function put(url, body, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return _put(url, body, conf);
+  return helper.put(url, body, conf);
 }
 
 /**
  * 发起单个post请求
  * @param {string} url 
- * @param {object} postBody 
+ * @param {object} body 
  * @param {{failStrategy?:number, retryCount?:number, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
-function post(url, postBody, extendedAxiosConfig) {
+function post(url, body, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return _post(url, postBody, conf);
+  return helper.post(url, body, conf);
 }
 
+/**
+ * 发起单个patch请求
+ * @param {string} url 
+ * @param {object} body 
+ * @param {{failStrategy?:number, retryCount?:number, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
+ */
+function patch(url, body, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  return helper.patch(url, body, conf);
+}
+
+/**
+ *
+ * @param {*} reqMethod
+ * @param {{url:string, data:string|object}} reqItems
+ * @param {*} extendedAxiosConfig
+ */
+function _multiReq(reqMethod, reqItems, extendedAxiosConfig) {
+  var conf = _makeConfig(extendedAxiosConfig);
+  var reqTasks = reqItems.map(function (item) {
+    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
+      return helper[reqMethod](item.url, item.data, conf).catch(function (err) { console.log('err:', err); return err; })
+    } else {
+      return helper[reqMethod](item.url, item.data, conf);
+    }
+  });
+  return Promise.all(reqTasks);
+}
 
 /**
  * 发起多个get请求
- * @param {string[]} urls 
+ * @param {string[] | {url:string, data:string|object}[]} items 
  * @param {{failStrategy?:number, retryCount?:number, cacheType?:null|'memory'|'localStorage', [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
-function multiGet(urls, extendedAxiosConfig) {
-  var conf = _makeConfig(extendedAxiosConfig);
-  var getTasks = urls.map(function (url) {
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _get(url, conf).catch(function (err) { console.log('err:', err); return err; })
-    } else {
-      return _get(url, conf);
-    }
-  });
-  return Promise.all(getTasks);
+function multiGet(items, extendedAxiosConfig) {
+  const reqItems = util.transformToReqItems(items);
+  return _multiReq('get', reqItems, extendedAxiosConfig);
 }
 
-function multiDel(urls, extendedAxiosConfig) {
-  var conf = _makeConfig(extendedAxiosConfig);
-  var getTasks = urls.map(function (url) {
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _del(url, conf).catch(function (err) { console.log('err:', err); return err; })
-    } else {
-      return _del(url, conf);
-    }
-  });
-  return Promise.all(getTasks);
+/**
+ * 发起多个delete请求
+ * @param {string[] | {url:string, data:string|object}[]} items 
+ * @param {{failStrategy?:number, retryCount?:number, cacheType?:null|'memory'|'localStorage', [otherAxiosConfigKey]:any}} extendedAxiosConfig 
+ */
+function multiDel(items, extendedAxiosConfig) {
+  const reqItems = util.transformToReqItems(items);
+  return _multiReq('del', reqItems, extendedAxiosConfig);
 }
 
 /**
@@ -249,31 +273,15 @@ function multiDel(urls, extendedAxiosConfig) {
  * @param {{failStrategy?:number, retryCount?:number, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
 function multiPost(items, extendedAxiosConfig) {
-  var conf = _makeConfig(extendedAxiosConfig);
-  var postTasks = items.map(function (item) {
-    var url = item.url;
-    var body = item.body;
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _post(url, body, conf).catch(function (err) { return err; })
-    } else {
-      return _post(url, body, conf);
-    }
-  });
-  return Promise.all(postTasks);
+  return _multiReq('post', items, extendedAxiosConfig);
+}
+
+function multiPatch(items, extendedAxiosConfig) {
+  return _multiReq('patch', items, extendedAxiosConfig);
 }
 
 function multiPut(items, extendedAxiosConfig) {
-  var conf = _makeConfig(extendedAxiosConfig);
-  var postTasks = items.map(function (item) {
-    var url = item.url;
-    var body = item.body;
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _put(url, body, conf).catch(function (err) { return err; })
-    } else {
-      return _put(url, body, conf);
-    }
-  });
-  return Promise.all(postTasks);
+  return _multiReq('put', items, extendedAxiosConfig);
 }
 
 function jsonp(url, extendedAxiosConfig) {
@@ -282,25 +290,17 @@ function jsonp(url, extendedAxiosConfig) {
 }
 
 /**
- * 发起多个post请求
- * @param {string} urls 
+ * 发起多个jsonp请求
+ * @param {{url:string, body:object}[]} items 
  * @param {{failStrategy?:number, retryCount?:number, callbackParamName?:string, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
 function multiJsonp(urls, extendedAxiosConfig) {
-  var conf = _makeConfig(extendedAxiosConfig);
-  var jsonpTasks = urls.map(function (url) {
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return _jsonp(url, conf).catch(function (err) { return err; })
-    } else {
-      return _jsonp(url, conf);
-    }
-  });
-  return Promise.all(jsonpTasks);
+  return _multiReq('jsonp', items, extendedAxiosConfig);
 }
 
 /**
- * 发起多个post请求
- * @param {Array<{type:'post', url:string, body:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
+ * 发起多个不同类型请求
+ * @param {Array<{type:'post', url:string, data:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
  * @param {{failStrategy?:number, retryCount?:number, callbackParamName?:string, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  */
 function multi(items, extendedAxiosConfig) {
@@ -309,17 +309,12 @@ function multi(items, extendedAxiosConfig) {
     var task;
     var type = item.type;
     var url = item.url;
+    var data = item.data;
 
-    if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      if (type === 'get') task = _get(url, conf).catch(function (err) { return err; });
-      else if (type === 'post') task = _post(url, item.body, conf).catch(function (err) { return err; });
-      else if (type === 'jsonp') task = _jsonp(url, conf).catch(function (err) { return err; });
-      else throw new Error('type ' + type + ' is wrong');
-    } else {
-      if (type === 'get') task = _get(url, conf);
-      else if (type === 'post') task = _post(url, item.body, conf);
-      else if (type === 'jsonp') task = _jsonp(url, conf);
-      else throw new Error('type ' + type + ' is wrong');
+    if(helper[type]){
+      task = helper[type](url, data, conf).catch(function (err) { return err; });
+    }else{
+      throw new Error('type[' + type + '] is not supported currently');
     }
     return task;
   });
@@ -369,11 +364,13 @@ module.exports = {
   multiPut: multiPut,
   post: post,
   multiPost: multiPost,
+  patch: patch,
+  multiPatch: multiPatch,
   jsonp: jsonp,
   multiJsonp: multiJsonp,
   multi: multi,
   axios: axios,
   const: cst,
-  setConfig: conf.setConfig,
-  getConfig: conf.getConfig,
+  setConfig: cuteConf.setConfig,
+  getConfig: cuteConf.getConfig,
 };

@@ -50,7 +50,7 @@ cute setConfig({
 ```
 /**
  * 发起多个post请求
- * @param {Array<{type:'post', url:string, body:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
+ * @param {Array<{type:'post', url:string, data:object} | {type:'get', url:string} | {type:'jsonp', url:string} >} items 
  * @param {{failStrategy?:number, retryCount?:number, callbackParamName?:string, [otherAxiosConfigKey]:any}} extendedAxiosConfig 
  * otherAxiosConfigKey @see https://github.com/axios/axios
  */
@@ -58,27 +58,29 @@ cute.multi(urls, extendedAxiosConfig)
 ```
 #### get
 ```
-cute.get(url:string, extendedAxiosConfig:ExtendedAxiosConfig)
+// data 会被自动stringify拼接到url末尾
+cute.get(url:string, data:string|object, extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 #### multiGet
 ```
-cute.multiGet(urls:string[], extendedAxiosConfig:ExtendedAxiosConfig)
+cute.multiGet(urls:string[] | {url:string, data:string|object}[], extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 #### post
 ```
-cute.post(url:string, body:object, extendedAxiosConfig:ExtendedAxiosConfig)
+cute.post(url:string, data:object, extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 #### multiPost
 ```
-cute.multiPost({url:string, body:object}[], extendedAxiosConfig:ExtendedAxiosConfig)
+cute.multiPost({url:string, data:object}[], extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 #### jsonp
 ```
-cute.jsonp(url:string, extendedAxiosConfig:ExtendedAxiosConfig)
+// data 会被自动stringify拼接到url末尾
+cute.jsonp(url:string, data:string|object, extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 #### multiJsonp
 ```
-cute.multiJsonp(urls:string[], extendedAxiosConfig:ExtendedAxiosConfig)
+cute.multiJsonp(urls:string[] | {url:string, data:string|object}[], extendedAxiosConfig:ExtendedAxiosConfig)
 ```
 
 ### 以下代码在test/test-api.js中，用户可以执行node ${your_test_dir}/test-api.js 查看效果
