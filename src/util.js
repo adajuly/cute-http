@@ -47,17 +47,21 @@ exports.isTimeout = function (error) {
 exports.appendDataToUrl = function (url, data) {
   var _url = url;
   if (data) {
+    var prefix = '';
     if (!_url.includes('?')) {
-      _url += '?'
-    }
-    if (typeof data === 'string') {
-      _url += data;
+      prefix = '?';
     } else {
-      _url += qs.stringify(data);
+      prefix = '&';
+    }
+
+    if (typeof data === 'string') {
+      _url += (prefix + data);
+    } else {
+      _url += (prefix + qs.stringify(data));
     }
   }
 
-  _debug(_url);
+  _debug('full req url is :' + _url);
   return _url;
 }
 
