@@ -1,6 +1,12 @@
 var conf = require('./config');
 var qs = require('query-string');
 
+function _debug(info) {
+  if (conf.getConfig().debug) {
+    console.debug(info);
+  }
+}
+
 exports.removeQuery = function (url) {
   var idx = url.indexOf('?');
   if (idx >= 0) {
@@ -39,17 +45,19 @@ exports.isTimeout = function (error) {
  * 针对get,del请求做data拼接url操作
  */
 exports.appendDataToUrl = function (url, data) {
-  let _url = url;
-  if (!data) return _url;
+  var _url = url;
+  if (data) {
+    if (!_url.includes('?')) {
+      _url += '?'
+    }
+    if (typeof data === 'string') {
+      _url += data;
+    } else {
+      _url += qs.stringify(data);
+    }
+  }
 
-  if (!_url.includes('?')) {
-    _url += '?'
-  }
-  if (typeof data === 'string') {
-    _url += data;
-  } else {
-    _url += qs.stringify(data);
-  }
+  _debug(_url);
   return _url;
 }
 

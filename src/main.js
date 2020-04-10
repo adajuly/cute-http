@@ -142,7 +142,7 @@ var helper = {
   get: function (url, data, conf) {
     var result = cache.getResult(conf.cacheType);
     if (result) {
-      Promise.resolve(result);
+      return Promise.resolve(result);
     } else {
       return _pomisedCallAxiosApi('get', [util.appendDataToUrl(url, data), conf.axiosConfig], conf);
     }
