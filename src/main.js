@@ -5,6 +5,13 @@ var util = require('./util');
 var cache = require('./cache');
 var jsonpAdapter = require('axios-jsonp');
 
+function _debug() {
+  var config = cuteConf.getConfig();
+  if (config.debug === true) {
+    console.debug(arguments);
+  }
+}
+
 function _verifyResponseData(url, data){
   var config = cuteConf.getConfig();
   var dataVerifyRule = config.dataVerifyRule;
@@ -41,9 +48,7 @@ function _retry(fn, args, conf, remainRetryCount, cb) {
   if (remainRetryCount === 0) {
     var err = new Error('fetch data failed after retry:' + retryCount + ' times!');
     err.code = cst.ERR_FETCH_FAILED_AFTER_RETRY;
-    if (config.debug === true) {
-      console.debug('重试结束，最终还是没有拿到结果');
-    }
+    _debug('重试结束，最终还是没有拿到结果');
     return cb(err);
   }
 
@@ -65,9 +70,7 @@ function _retry(fn, args, conf, remainRetryCount, cb) {
     }
   }).catch(err => {
     if (util.isTimeout(err)) {
-      if (config.debug === true) {
-        console.debug('第' + remainRetryCount + '连接已超时，cute将继续重试');
-      }
+      _debug('第' + remainRetryCount + '连接已超时，cute将继续重试');
       return _retry(fn, args, conf, --remainRetryCount, cb);
     }
     cb(err);
@@ -124,6 +127,7 @@ function _makeConfig(userInputAxiosConfig) {
 
 function _callAxiosApi(method, args, conf, resolve, reject) {
   var retryCount = conf.retryCount;
+  _debug('_callAxiosApi: ', method, args);
   _retry(axios[method], args, conf, retryCount, (err, reply) => {
     err ? reject(err) : resolve(reply);
   });
