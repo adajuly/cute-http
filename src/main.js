@@ -364,6 +364,8 @@ module.exports = {
   multiGet: multiGet,
   del: del,
   multiDel: multiDel,
+  delete: del,
+  multiDelete: multiDel,
   put: put,
   multiPut: multiPut,
   post: post,
