@@ -3,6 +3,7 @@ var cst = require('./const');
 var cuteConf = require('./config');
 var util = require('./util');
 var cache = require('./cache');
+var cdPost = require('./cross-domain-post');
 var jsonpAdapter = require('axios-jsonp');
 
 function _debug() {
@@ -357,6 +358,21 @@ function multiRequest(specList, option) {
   return Promise.all(tasks);
 }
 
+/**
+ * 
+ * @param {*} params 
+*   const params = {
+      data: { of: 'jsonjs', 'Filedata': files[0] },
+      url,
+      domain: 'webdev.com',
+      postMessage: true,
+      timeout: 300000
+    };
+ */
+function crossDomainPost(params) {
+  cdPost.send(params)
+}
+
 module.exports = {
   multiRequest: multiRequest,
   request: request,
@@ -379,4 +395,5 @@ module.exports = {
   const: cst,
   setConfig: cuteConf.setConfig,
   getConfig: cuteConf.getConfig,
+  crossDomainPost: crossDomainPost,
 };
