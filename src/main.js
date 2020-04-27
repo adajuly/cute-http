@@ -396,4 +396,5 @@ module.exports = {
   setConfig: cuteConf.setConfig,
   getConfig: cuteConf.getConfig,
   crossDomainPost: crossDomainPost,
+  createFileForm: cdPost.createFileForm,
 };
