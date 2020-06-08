@@ -117,8 +117,15 @@ function _makeConfig(userInputAxiosConfig) {
     delete axiosConfig.callbackParamName;
   }
 
+  var mockData = null;
+  if (axiosConfig.mockData !== undefined) {
+    mockData = axiosConfig.mockData;
+    delete axiosConfig.mockData;
+  }
+
   return {
     axiosConfig: axiosConfig,
+    mockData: mockData,
     retryCount: retryCount,
     failStrategy: failStrategy,
     cacheType: cacheType,
@@ -178,6 +185,14 @@ var helper = {
   }
 }
 
+function sendRequest(method, url, data, conf) {
+  if (conf.mockData) {
+    return conf.mockData(method, url, data);
+  } else {
+    return helper[method](url, data, conf);
+  }
+} 
+
 
 /**
  * 发起单个get请求
@@ -187,7 +202,7 @@ var helper = {
  */
 function get(url, data, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return helper.get(url, data, conf);
+  return sendRequest('get', url, data, conf);
 }
 
 /**
@@ -198,7 +213,7 @@ function get(url, data, extendedAxiosConfig) {
  */
 function del(url, data, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return helper.del(url, data, conf);
+  return sendRequest('del', url, data, conf);
 }
 
 /**
@@ -209,7 +224,7 @@ function del(url, data, extendedAxiosConfig) {
  */
 function put(url, body, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return helper.put(url, body, conf);
+  return sendRequest('put', url, body, conf);
 }
 
 /**
@@ -220,7 +235,7 @@ function put(url, body, extendedAxiosConfig) {
  */
 function post(url, body, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return helper.post(url, body, conf);
+  return sendRequest('post', url, body, conf);
 }
 
 /**
@@ -231,7 +246,7 @@ function post(url, body, extendedAxiosConfig) {
  */
 function patch(url, body, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
-  return helper.patch(url, body, conf);
+  return sendRequest('patch', url, body, conf);
 }
 
 /**
@@ -244,9 +259,9 @@ function _multiReq(reqMethod, reqItems, extendedAxiosConfig) {
   var conf = _makeConfig(extendedAxiosConfig);
   var reqTasks = reqItems.map(function (item) {
     if (conf.failStrategy === cst.KEEP_ALL_BEEN_EXECUTED) {
-      return helper[reqMethod](item.url, item.data, conf).catch(function (err) { console.log('err:', err); return err; })
+      return sendRequest(reqMethod, item.url, item.data, conf).catch(function (err) { console.log('err:', err); return err; })
     } else {
-      return helper[reqMethod](item.url, item.data, conf);
+      return sendRequest(reqMethod, item.url, item.data, conf);
     }
   });
   return Promise.all(reqTasks);
