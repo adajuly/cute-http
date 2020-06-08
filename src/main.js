@@ -123,9 +123,16 @@ function _makeConfig(userInputAxiosConfig) {
     delete axiosConfig.mockData;
   }
 
+  var replyReceived = null;
+  if (axiosConfig.replyReceived !== undefined) {
+    replyReceived = axiosConfig.replyReceived;
+    delete axiosConfig.replyReceived;
+  }
+
   return {
     axiosConfig: axiosConfig,
     mockData: mockData,
+    replyReceived: replyReceived,
     retryCount: retryCount,
     failStrategy: failStrategy,
     cacheType: cacheType,
@@ -189,7 +196,10 @@ function sendRequest(method, url, data, conf) {
   if (conf.mockData) {
     return conf.mockData(method, url, data);
   } else {
-    return helper[method](url, data, conf);
+    return helper[method](url, data, conf).then(reply => {
+      if (conf.replyReceived) conf.replyReceived(reply, method, url, data);
+      return reply;
+    });
   }
 } 
 
