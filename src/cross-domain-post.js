@@ -7,7 +7,7 @@
         const params = {
             data: { of: 'jsonjs', 'Filedata': files[0] },
             url,
-            domain: 'webdev.com',
+            domain: 'xxx.com',
             postMessage: true,
             timeout: 300000
         };
@@ -62,7 +62,7 @@ function Post(){
   // 初始化 params
   this.initParams = function (params) {
     this.params = params || this.params;
-    this.params.domain = params.domain || "qq.com";
+    this.params.domain = params.domain || "you_should_offer_a_domain.com";
     this.params.enctype = params.enctype || "";
     this.params.removeIframe = params.removeIframe === undefined ? true : params.removeIframe;
     this.params.removeDom = params.removeDom === undefined ? true : params.removeDom;
