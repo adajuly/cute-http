@@ -389,7 +389,7 @@ function multiRequest(specList, option) {
 *   const params = {
       data: { of: 'jsonjs', 'Filedata': files[0] },
       url,
-      domain: 'webdev.com',
+      domain: 'xxx.com',
       postMessage: true,
       timeout: 300000
     };
