@@ -417,7 +417,9 @@ module.exports = {
   multiJsonp: multiJsonp,
   multi: multi,
   axios: axios,
+  /** 这个key的存在仅为了兼容老代码，不再推荐使用 */
   const: cst,
+  cst: cst,
   setConfig: cuteConf.setConfig,
   getConfig: cuteConf.getConfig,
   crossDomainPost: crossDomainPost,

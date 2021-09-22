@@ -1,12 +1,13 @@
 {
-  "name": "cute-http",
-  "version": "2.1.3",
+  "name": "@tencent/leah-request",
+  "version": "2.2.5",
   "description": "allow you cache response with memory or localStorage; allow you set timeout and retry count;allow you send multi request in one time",
   "main": "index.js",
   "types": "src/types.d.ts",
   "scripts": {
     "start": "node ./test/mock-server/run.js  ",
     "test": "./node_modules/ava/cli.js ./test/test-api.js ",
+    "pub": "npm publish --registry=https://registry.npmjs.org",
     "build": "tsc"
   },
   "repository": {
