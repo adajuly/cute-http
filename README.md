@@ -45,7 +45,7 @@ const {ONE_ERROR_ABORT_ALL, KEEP_ALL_BEEN_EXECUTED, LOCAL_STORAGE, MEMORY} = cut
 
 #### setConfig
 
-顶层 api,为 cute 配置参数
+顶层 api，为 cute 配置参数
 
 ```
 cute setConfig({
